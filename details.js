@@ -1,31 +1,94 @@
-const searchParams = new URLSearchParams(window.location.search);
-const id = searchParams.get('id');
+const productContainer = document.getElementById('product-details');
 
-const URL = 'https://68e3ee658e116898997a7a6c.mockapi.io/data';
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
 
-fetch(`${URL}/${id}`)
-	.then((response) => response.json())
-	.then((product) => {
-		const container = document.querySelector('.details-container');
+  if (!id) {
+    productContainer.innerHTML = `<p>Produsul nu a fost găsit.</p>`;
+    return;
+  }
 
-		container.innerHTML = `
-      <div class="product-details-card">
-        <img src="${product.imageURL}" alt="${product.marca} ${product.model}" class="details-image" />
+  fetch(`https://68e3ee658e116898997a7a6c.mockapi.io/data/${id}`)
+    .then(res => res.json())
+    .then(product => {
+      if (!product) {
+        productContainer.innerHTML = `<p>Produsul nu există.</p>`;
+        return;
+      }
+
+      let cart = JSON.parse(localStorage.getItem('cart')) || {};
+      let quantityInCart = cart[id] ? cart[id].quantity : 1;
+
+      // fallback pentru câmpurile care pot lipsi
+      const marca = product.marca || 'N/A';
+      const model = product.model || '';
+      const pret = product.pret || 0;
+      const imageURL = product.imageURL || 'placeholder.jpg';
+      const detalii = product.detalii || '';
+      const an = product.an || '';
+      const combustibil = product.Combustibil || '';
+      const cutie = product.Cutie || '';
+      const km = product.km || '';
+      const culoare = product.Culoare || '';
+
+      productContainer.innerHTML = `
+        <img class="details-image" src="${imageURL}" alt="${marca}" />
         <div class="details-info">
-          <h2 class="details-title">${product.marca} ${product.model}</h2>
-          <p><strong>An:</strong> ${product.an}</p>
-          <p><strong>Combustibil:</strong> ${product.Combustibil}</p>
-          <p><strong>Cutie:</strong> ${product.Cutie}</p>
-          <p><strong>Km:</strong> ${product.km}</p>
-          <p><strong>Culoare:</strong> ${product.Culoare}</p>
-          <p><strong>Preț:</strong> <span class="details-price">${product.pret} €</span></p>
-          <p class="details-description">${product.detalii}</p>
+          <h2 class="details-title">${marca} ${model}</h2>
+          <p class="details-price">${pret} EUR</p>
+          <p class="details-description">${detalii}</p>
+          <p><strong>An:</strong> ${an}</p>
+          <p><strong>Combustibil:</strong> ${combustibil}</p>
+          <p><strong>Cutie:</strong> ${cutie}</p>
+          <p><strong>KM:</strong> ${km}</p>
+          <p><strong>Culoare:</strong> ${culoare}</p>
+
+          <div style="display:flex; align-items:center; gap:10px; margin:10px 0;">
+            <button id="decrease" style="padding:6px 10px; border-radius:8px;">-</button>
+            <span id="quantity">${quantityInCart}</span>
+            <button id="increase" style="padding:6px 10px; border-radius:8px;">+</button>
+          </div>
+
+          <button id="buy-btn" class="cart-btn">Cumpără</button>
         </div>
-      </div>
-    `;
-	})
-	.catch((error) => {
-		console.error('Eroare la aducerea produsului:', error);
-		document.querySelector('.details-container').innerHTML =
-			'<p>Eroare la încărcarea datelor produsului.</p>';
-	});
+      `;
+
+      const quantitySpan = document.getElementById('quantity');
+      let quantity = quantityInCart;
+
+      document.getElementById('increase').addEventListener('click', () => {
+        quantity++;
+        quantitySpan.textContent = quantity;
+      });
+
+      document.getElementById('decrease').addEventListener('click', () => {
+        if (quantity > 1) {
+          quantity--;
+          quantitySpan.textContent = quantity;
+        }
+      });
+
+      document.getElementById('buy-btn').addEventListener('click', () => {
+        let cart = JSON.parse(localStorage.getItem('cart')) || {};
+
+        if (cart[id]) {
+          cart[id].quantity += quantity;
+        } else {
+          cart[id] = {
+            marca: marca,
+            pret: pret,
+            imageURL: imageURL,
+            quantity: quantity
+          };
+        }
+
+        localStorage.setItem('cart', JSON.stringify(cart));
+        window.location.href = 'cart.html';
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      productContainer.innerHTML = `<p>Eroare la încărcarea produsului.</p>`;
+    });
+});

@@ -600,10 +600,10 @@ body {
 	}
 }
 .details-btn {
-  display: inline-block;       /* permite padding și width */
+  display: inline-block;       
   background-color: var(--orange);
   color: white;
-  text-decoration: none;       /* elimină sublinierea link-ului */
+  text-decoration: none;       
   padding: 8px 14px;
   border-radius: 16px;
   font-weight: 600;
