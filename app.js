@@ -11,27 +11,51 @@ function displayProducts() {
 				return response.json();
 			}
 		})
-		.then(
-			(products) =>
-				(document.querySelector('.products-container').innerHTML = products
-					.map(
-						(product) => `
+		.then((products) => {
+			document.querySelector('.products-container').innerHTML = products
+				.map(
+					(product) => `
          <div class="product-card">
 				<img
 					src=${product.imageURL}
 					alt="Product image"
 				/>
 				<div class="product-info">
-					<h3>${product.marca} ${product.model} ${product.an} </h3>
-					<div class="price">Pret: ${product.pret} EUR</div>
+					<h3>${product.marca} ${product.model}</h3>
+					<div class="pret">${product.pret} EUR</div>
 					<div class="buttons">
-						<button class="details-btn">Details</button>
-						<button class="cart-btn">Add to Cart</button>
+						<a href="details.html?id=${product.id}" class="details-btn">Details</a>
+						<button data-id=${product.id} class="cart-btn">Add to Cart</button>
 					</div>
 				</div>
 			</div>   
       `
-					)
-					.join(''))
-		);
+				)
+				.join('');
+			const addToCartButtons = document.querySelectorAll('.cart-btn');
+			addToCartButtons.forEach((button) => {
+				button.addEventListener('click', (e) => {
+					const productId = e.target.dataset.id;
+					const product = products.filter(
+						(product) => product.id === productId
+					)[0];
+					console.log(product);
+
+					let cart = JSON.parse(localStorage.getItem('cart')) || {};
+
+					if (cart[productId]) {
+						cart[productId].quantity++;
+					} else {
+						cart[productId] = {
+							quantity: 1,
+							pret: product.pret,
+							image: product.imageURL,
+							marca: product.marca,
+						};
+					}
+
+					localStorage.setItem('cart', JSON.stringify(cart));
+				});
+			});
+		});
 }
